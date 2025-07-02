@@ -1,13 +1,29 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Trophy, Flame, Star, Crown, Lock, Play, CheckCircle } from "lucide-react"
-import Link from "next/link"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Trophy,
+  Flame,
+  Star,
+  Crown,
+  Lock,
+  Play,
+  CheckCircle,
+} from "lucide-react";
+import Link from "next/link";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 // Mock data - in real app this would come from your database
 const mockUser = {
@@ -19,7 +35,7 @@ const mockUser = {
   totalLessons: 45,
   completedLessons: 32,
   isPro: false,
-}
+};
 
 const lessonCategories = [
   {
@@ -106,54 +122,26 @@ const lessonCategories = [
     color: "bg-indigo-100 border-indigo-300",
     lessons: [],
   },
-]
+];
 
 export default function DashboardPage() {
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
-  const progressPercentage = (mockUser.xp / (mockUser.xp + mockUser.xpToNext)) * 100
+  const progressPercentage =
+    (mockUser.xp / (mockUser.xp + mockUser.xpToNext)) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-green-50">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">日</span>
-            </div>
-            <span className="text-xl font-bold text-gray-800">NihongoJourney</span>
-          </div>
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/lessons" className="text-gray-600 hover:text-red-500 transition-colors">
-              Lessons
-            </Link>
-            <Link href="/study" className="text-gray-600 hover:text-red-500 transition-colors">
-              Study Notes
-            </Link>
-            <Link href="/community" className="text-gray-600 hover:text-red-500 transition-colors">
-              Community
-            </Link>
-            <Link href="/subscription" className="text-gray-600 hover:text-red-500 transition-colors">
-              Pricing
-            </Link>
-          </nav>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Flame className="w-5 h-5 text-orange-500" />
-              <span className="font-semibold">{mockUser.streak}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Star className="w-5 h-5 text-yellow-500" />
-              <span className="font-semibold">{mockUser.xp} XP</span>
-            </div>
-            <Avatar>
-              <AvatarImage src="/placeholder.svg?height=32&width=32" />
-              <AvatarFallback>YT</AvatarFallback>
-            </Avatar>
-          </div>
-        </div>
-      </header>
+      <Navbar
+        showAuthButtons={false}
+        userInitials="YT"
+        showUserStats={true}
+        userStats={{
+          streak: mockUser.streak,
+          xp: mockUser.xp,
+        }}
+      />
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -187,11 +175,15 @@ export default function DashboardPage() {
 
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
-                      <div className="text-2xl font-bold text-orange-500">{mockUser.streak}</div>
+                      <div className="text-2xl font-bold text-orange-500">
+                        {mockUser.streak}
+                      </div>
                       <div className="text-xs text-gray-600">Day Streak</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-green-500">{mockUser.completedLessons}</div>
+                      <div className="text-2xl font-bold text-green-500">
+                        {mockUser.completedLessons}
+                      </div>
                       <div className="text-xs text-gray-600">Lessons Done</div>
                     </div>
                   </div>
@@ -207,10 +199,15 @@ export default function DashboardPage() {
                     <Crown className="w-5 h-5 text-yellow-500 mr-2" />
                     Upgrade to Pro
                   </CardTitle>
-                  <CardDescription>Unlock unlimited lessons and advanced features</CardDescription>
+                  <CardDescription>
+                    Unlock unlimited lessons and advanced features
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full bg-yellow-500 hover:bg-yellow-600" asChild>
+                  <Button
+                    className="w-full bg-yellow-500 hover:bg-yellow-600"
+                    asChild
+                  >
                     <Link href="/upgrade">Upgrade Now</Link>
                   </Button>
                 </CardContent>
@@ -229,7 +226,9 @@ export default function DashboardPage() {
                     <span className="text-sm font-semibold">3/5</span>
                   </div>
                   <Progress value={60} className="h-2" />
-                  <p className="text-xs text-gray-600">2 more lessons to reach your daily goal!</p>
+                  <p className="text-xs text-gray-600">
+                    2 more lessons to reach your daily goal!
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -238,51 +237,75 @@ export default function DashboardPage() {
           {/* Main Content - Lessons */}
           <div className="lg:col-span-3">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Your Learning Path</h1>
-              <p className="text-gray-600">Continue your Japanese journey with structured lessons</p>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                Your Learning Path
+              </h1>
+              <p className="text-gray-600">
+                Continue your Japanese journey with structured lessons
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {lessonCategories.map((category) => (
                 <Card
                   key={category.id}
-                  className={`${category.color} border-2 hover:shadow-lg transition-all cursor-pointer ${
+                  className={`${
+                    category.color
+                  } border-2 hover:shadow-lg transition-all cursor-pointer ${
                     !category.isUnlocked ? "opacity-60" : ""
                   }`}
-                  onClick={() => category.isUnlocked && setSelectedCategory(category.id)}
+                  onClick={() =>
+                    category.isUnlocked && setSelectedCategory(category.id)
+                  }
                 >
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="text-3xl">{category.icon}</div>
                         <div>
-                          <CardTitle className="text-lg">{category.title}</CardTitle>
-                          <CardDescription>{category.description}</CardDescription>
+                          <CardTitle className="text-lg">
+                            {category.title}
+                          </CardTitle>
+                          <CardDescription>
+                            {category.description}
+                          </CardDescription>
                         </div>
                       </div>
-                      {!category.isUnlocked && <Lock className="w-5 h-5 text-gray-400" />}
+                      {!category.isUnlocked && (
+                        <Lock className="w-5 h-5 text-gray-400" />
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">
-                          {category.completedLessons}/{category.totalLessons} lessons
+                          {category.completedLessons}/{category.totalLessons}{" "}
+                          lessons
                         </span>
-                        {category.completedLessons === category.totalLessons && category.totalLessons > 0 && (
-                          <Badge className="bg-green-500">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Complete
-                          </Badge>
-                        )}
+                        {category.completedLessons === category.totalLessons &&
+                          category.totalLessons > 0 && (
+                            <Badge className="bg-green-500">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Complete
+                            </Badge>
+                          )}
                       </div>
-                      <Progress value={(category.completedLessons / category.totalLessons) * 100} className="h-2" />
+                      <Progress
+                        value={
+                          (category.completedLessons / category.totalLessons) *
+                          100
+                        }
+                        className="h-2"
+                      />
 
                       {category.isUnlocked ? (
                         <Button className="w-full" asChild>
                           <Link href={`/lesson/${category.id}`}>
                             <Play className="w-4 h-4 mr-2" />
-                            {category.completedLessons === 0 ? "Start" : "Continue"}
+                            {category.completedLessons === 0
+                              ? "Start"
+                              : "Continue"}
                           </Link>
                         </Button>
                       ) : (
@@ -312,8 +335,12 @@ export default function DashboardPage() {
                       <CheckCircle className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                      <p className="font-medium">Completed "Japanese Greetings"</p>
-                      <p className="text-sm text-gray-600">Earned 100 XP • 2 hours ago</p>
+                      <p className="font-medium">
+                        Completed "Japanese Greetings"
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Earned 100 XP • 2 hours ago
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3 p-3 bg-orange-50 rounded-lg">
@@ -322,7 +349,9 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="font-medium">7-day streak!</p>
-                      <p className="text-sm text-gray-600">Keep it up! • Today</p>
+                      <p className="text-sm text-gray-600">
+                        Keep it up! • Today
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -331,6 +360,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
-  )
+  );
 }

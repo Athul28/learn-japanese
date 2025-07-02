@@ -1,144 +1,87 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, CheckCircle, XCircle, Star, Heart } from "lucide-react"
-import Link from "next/link"
-import { ALL_LESSONS } from "@/lib/japanese-content"
-
-// Mock lesson data based on the provided Japanese content
-// const lessonData = {
-//   1: {
-//     title: "Japanese Greetings",
-//     description: "Learn essential daily greetings",
-//     questions: [
-//       {
-//         id: 1,
-//         type: "multiple-choice",
-//         question: "What does 'Konnichiwa' mean?",
-//         options: ["Good morning", "Hello", "Good night", "Goodbye"],
-//         correct: 1,
-//         explanation: "Konnichiwa (こんにちは) is the most common greeting meaning 'Hello' in Japanese.",
-//       },
-//       {
-//         id: 2,
-//         type: "translation",
-//         question: "How do you say 'Good morning' in Japanese?",
-//         answer: "Ohayou gozaimasu",
-//         explanation: "Ohayou gozaimasu (おはようございます) is the polite way to say 'Good morning'.",
-//       },
-//       {
-//         id: 3,
-//         type: "multiple-choice",
-//         question: "What is the meaning of 'Arigatou gozaimasu'?",
-//         options: ["Excuse me", "Thank you very much", "I'm sorry", "You're welcome"],
-//         correct: 1,
-//         explanation:
-//           "Arigatou gozaimasu (ありがとうございます) means 'Thank you very much' - a polite expression of gratitude.",
-//       },
-//       {
-//         id: 4,
-//         type: "matching",
-//         question: "Match the Japanese greeting with its English meaning:",
-//         pairs: [
-//           { japanese: "Sumimasen", english: "Excuse me" },
-//           { japanese: "Ja mata", english: "See you" },
-//           { japanese: "Oyasumi nasai", english: "Good night" },
-//         ],
-//         explanation: "These are common daily expressions used in various situations.",
-//       },
-//     ],
-//   },
-//   2: {
-//     title: "Hiragana Basics",
-//     description: "Master the hiragana writing system",
-//     questions: [
-//       {
-//         id: 1,
-//         type: "multiple-choice",
-//         question: "What is the romaji for 'あ'?",
-//         options: ["i", "a", "u", "e"],
-//         correct: 1,
-//         explanation: "あ is pronounced 'a' - the first vowel in the hiragana system.",
-//       },
-//       {
-//         id: 2,
-//         type: "writing",
-//         question: "Write the hiragana for 'ka':",
-//         answer: "か",
-//         explanation: "か (ka) is formed by combining the 'k' consonant with the 'a' vowel sound.",
-//       },
-//     ],
-//   },
-// }
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, CheckCircle, XCircle, Star, Heart } from "lucide-react";
+import Link from "next/link";
+import { AppLayout } from "@/components/app-layout";
+import { ALL_LESSONS } from "@/lib/japanese-content";
 
 export default function LessonPage() {
-  const params = useParams()
-  const router = useRouter()
-  const lessonId = Number.parseInt(params.id as string)
+  const params = useParams();
+  const router = useRouter();
+  const lessonId = Number.parseInt(params.id as string);
 
-  const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [selectedAnswer, setSelectedAnswer] = useState<number | string | null>(null)
-  const [showResult, setShowResult] = useState(false)
-  const [isCorrect, setIsCorrect] = useState(false)
-  const [score, setScore] = useState(0)
-  const [hearts, setHearts] = useState(5)
-  const [xpEarned, setXpEarned] = useState(0)
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | string | null>(
+    null
+  );
+  const [showResult, setShowResult] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [score, setScore] = useState(0);
+  const [hearts, setHearts] = useState(5);
+  const [xpEarned, setXpEarned] = useState(0);
 
-  const lesson = ALL_LESSONS[lessonId as keyof typeof ALL_LESSONS]
+  const lesson = ALL_LESSONS[lessonId as keyof typeof ALL_LESSONS];
 
   if (!lesson) {
-    return <div>Lesson not found</div>
+    return <div>Lesson not found</div>;
   }
 
-  const question = lesson.questions[currentQuestion]
-  const progress = ((currentQuestion + 1) / lesson.questions.length) * 100
+  const question = lesson.questions[currentQuestion];
+  const progress = ((currentQuestion + 1) / lesson.questions.length) * 100;
 
   const handleAnswerSelect = (answer: number | string) => {
-    setSelectedAnswer(answer)
-  }
+    setSelectedAnswer(answer);
+  };
 
   const handleSubmit = () => {
-    let correct = false
+    let correct = false;
 
     if (question.type === "multiple-choice") {
-      correct = selectedAnswer === question.correct
+      correct = selectedAnswer === question.correct;
     } else if (question.type === "translation" || question.type === "writing") {
-      correct = (selectedAnswer as string)?.toLowerCase().trim() === question.answer?.toLowerCase().trim()
+      correct =
+        (selectedAnswer as string)?.toLowerCase().trim() ===
+        question.answer?.toLowerCase().trim();
     }
 
-    setIsCorrect(correct)
-    setShowResult(true)
+    setIsCorrect(correct);
+    setShowResult(true);
 
     if (correct) {
-      setScore(score + 1)
-      setXpEarned(xpEarned + 10)
+      setScore(score + 1);
+      setXpEarned(xpEarned + 10);
     } else {
-      setHearts(Math.max(0, hearts - 1))
+      setHearts(Math.max(0, hearts - 1));
     }
-  }
+  };
 
   const handleNext = () => {
     if (currentQuestion < lesson.questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1)
-      setSelectedAnswer(null)
-      setShowResult(false)
+      setCurrentQuestion(currentQuestion + 1);
+      setSelectedAnswer(null);
+      setShowResult(false);
     } else {
       // Lesson complete
-      router.push(`/lesson-complete?score=${score}&total=${lesson.questions.length}&xp=${xpEarned}`)
+      router.push(
+        `/lesson-complete?score=${score}&total=${lesson.questions.length}&xp=${xpEarned}`
+      );
     }
-  }
+  };
 
   const renderQuestion = () => {
     switch (question.type) {
       case "multiple-choice":
         return (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-center mb-6">{question.question}</h2>
+            <h2 className="text-2xl font-bold text-center mb-6">
+              {question.question}
+            </h2>
             <div className="grid grid-cols-1 gap-3">
               {question.options?.map((option, index) => (
                 <Button
@@ -154,13 +97,15 @@ export default function LessonPage() {
               ))}
             </div>
           </div>
-        )
+        );
 
       case "translation":
       case "writing":
         return (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-center mb-6">{question.question}</h2>
+            <h2 className="text-2xl font-bold text-center mb-6">
+              {question.question}
+            </h2>
             <div className="max-w-md mx-auto">
               <input
                 type="text"
@@ -171,17 +116,17 @@ export default function LessonPage() {
               />
             </div>
           </div>
-        )
+        );
 
       default:
-        return <div>Question type not supported</div>
+        return <div>Question type not supported</div>;
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+    <AppLayout showAuthButtons={false}>
+      {/* Lesson Header */}
+      <div className="border-b bg-white/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -214,7 +159,7 @@ export default function LessonPage() {
             </p>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
@@ -234,7 +179,13 @@ export default function LessonPage() {
               </CardContent>
             </Card>
           ) : (
-            <Card className={`border-2 ${isCorrect ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}`}>
+            <Card
+              className={`border-2 ${
+                isCorrect
+                  ? "border-green-300 bg-green-50"
+                  : "border-red-300 bg-red-50"
+              }`}
+            >
               <CardContent className="p-8 text-center">
                 <div className="mb-4">
                   {isCorrect ? (
@@ -243,14 +194,24 @@ export default function LessonPage() {
                     <XCircle className="w-16 h-16 text-red-500 mx-auto" />
                   )}
                 </div>
-                <h2 className={`text-2xl font-bold mb-4 ${isCorrect ? "text-green-700" : "text-red-700"}`}>
+                <h2
+                  className={`text-2xl font-bold mb-4 ${
+                    isCorrect ? "text-green-700" : "text-red-700"
+                  }`}
+                >
                   {isCorrect ? "Correct!" : "Not quite right"}
                 </h2>
                 <p className="text-gray-700 mb-6">{question.explanation}</p>
-                {isCorrect && <Badge className="bg-yellow-500 text-white mb-4">+10 XP</Badge>}
+                {isCorrect && (
+                  <Badge className="bg-yellow-500 text-white mb-4">
+                    +10 XP
+                  </Badge>
+                )}
                 <div>
                   <Button onClick={handleNext} className="px-8 py-3 text-lg">
-                    {currentQuestion < lesson.questions.length - 1 ? "Next Question" : "Complete Lesson"}
+                    {currentQuestion < lesson.questions.length - 1
+                      ? "Next Question"
+                      : "Complete Lesson"}
                   </Button>
                 </div>
               </CardContent>
@@ -258,6 +219,6 @@ export default function LessonPage() {
           )}
         </div>
       </div>
-    </div>
-  )
+    </AppLayout>
+  );
 }

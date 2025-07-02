@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Card,
@@ -15,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Play, Volume2, Star, Heart, Brain, Eye } from "lucide-react";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 // Study content with visual learning aids
 const studyCategories = [
@@ -654,7 +656,8 @@ const studyCategories = [
         romaji: "man",
         english: "ten thousand",
         image: "📊",
-        memoryTip: "Man - just like English 'man' - one man, ten thousand dreams!",
+        memoryTip:
+          "Man - just like English 'man' - one man, ten thousand dreams!",
       },
     ],
   },
@@ -666,26 +669,26 @@ export default function StudyPage() {
   const [isVoicesLoaded, setIsVoicesLoaded] = useState(false);
 
   // Load voices when component mounts
-  useState(() => {
-    if ('speechSynthesis' in window) {
+  useEffect(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
       const loadVoices = () => {
         const voices = window.speechSynthesis.getVoices();
         if (voices.length > 0) {
           setIsVoicesLoaded(true);
         }
       };
-      
+
       // Load voices immediately if available
       loadVoices();
-      
+
       // Also listen for voices changed event (some browsers load voices asynchronously)
-      window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
-      
+      window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+
       return () => {
-        window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+        window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
       };
     }
-  });
+  }, []);
 
   const filteredCategories = studyCategories.filter(
     (category) =>
@@ -698,35 +701,37 @@ export default function StudyPage() {
   );
 
   const playAudio = (text: string, isJapanese: boolean = true) => {
-    if ('speechSynthesis' in window) {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-      
+
       const utterance = new SpeechSynthesisUtterance(text);
-      
+
       if (isJapanese) {
         // Japanese settings
-        utterance.lang = 'ja-JP';
+        utterance.lang = "ja-JP";
         utterance.rate = 0.7; // Slower for Japanese learning
         utterance.pitch = 1.0;
         utterance.volume = 1.0;
-        
+
         // Try to find the best Japanese voice
         const voices = window.speechSynthesis.getVoices();
-        const japaneseVoices = voices.filter(voice => 
-          voice.lang.includes('ja') || 
-          voice.name.toLowerCase().includes('japanese') ||
-          voice.name.toLowerCase().includes('japan')
+        const japaneseVoices = voices.filter(
+          (voice) =>
+            voice.lang.includes("ja") ||
+            voice.name.toLowerCase().includes("japanese") ||
+            voice.name.toLowerCase().includes("japan")
         );
-        
+
         // Prefer female Japanese voices as they're often clearer for learning
-        const femaleJapaneseVoice = japaneseVoices.find(voice => 
-          voice.name.toLowerCase().includes('female') || 
-          voice.name.toLowerCase().includes('woman') ||
-          voice.name.toLowerCase().includes('kyoko') ||
-          voice.name.toLowerCase().includes('otoya')
+        const femaleJapaneseVoice = japaneseVoices.find(
+          (voice) =>
+            voice.name.toLowerCase().includes("female") ||
+            voice.name.toLowerCase().includes("woman") ||
+            voice.name.toLowerCase().includes("kyoko") ||
+            voice.name.toLowerCase().includes("otoya")
         );
-        
+
         if (femaleJapaneseVoice) {
           utterance.voice = femaleJapaneseVoice;
         } else if (japaneseVoices.length > 0) {
@@ -734,77 +739,43 @@ export default function StudyPage() {
         }
       } else {
         // English settings
-        utterance.lang = 'en-US';
+        utterance.lang = "en-US";
         utterance.rate = 0.9;
         utterance.pitch = 1.0;
         utterance.volume = 1.0;
       }
-      
+
       // Error handling
       utterance.onerror = (event) => {
-        console.error('Speech synthesis error:', event.error);
-        if (event.error === 'not-allowed') {
-          alert('Speech synthesis was blocked. Please check your browser settings.');
+        console.error("Speech synthesis error:", event.error);
+        if (event.error === "not-allowed") {
+          alert(
+            "Speech synthesis was blocked. Please check your browser settings."
+          );
         }
       };
-      
+
       utterance.onstart = () => {
-        console.log(`Speaking: ${text} (${isJapanese ? 'Japanese' : 'English'})`);
+        console.log(
+          `Speaking: ${text} (${isJapanese ? "Japanese" : "English"})`
+        );
       };
-      
+
       // Speak the text
       window.speechSynthesis.speak(utterance);
     } else {
       // Fallback for browsers that don't support speech synthesis
       console.log(`Speech synthesis not supported. Text: ${text}`);
-      alert('Speech synthesis is not supported in your browser. Please try Chrome, Firefox, Safari, or Edge.');
+      alert(
+        "Speech synthesis is not supported in your browser. Please try Chrome, Firefox, Safari, or Edge."
+      );
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">日</span>
-              </div>
-              <span className="text-xl font-bold text-gray-800">
-                NihongoJourney
-              </span>
-            </Link>
-          </div>
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link
-              href="/dashboard"
-              className="text-gray-600 hover:text-red-500 transition-colors"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/lessons"
-              className="text-gray-600 hover:text-red-500 transition-colors"
-            >
-              Lessons
-            </Link>
-            <Link href="/study" className="text-red-500 font-medium">
-              Study Notes
-            </Link>
-            <Link
-              href="/community"
-              className="text-gray-600 hover:text-red-500 transition-colors"
-            >
-              Community
-            </Link>
-          </nav>
-          <Avatar>
-            <AvatarImage src="/placeholder.svg?height=32&width=32" />
-            <AvatarFallback>YT</AvatarFallback>
-          </Avatar>
-        </div>
-      </header>
+      <Navbar showAuthButtons={false} userInitials="YT" />
 
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
@@ -827,7 +798,7 @@ export default function StudyPage() {
               className="pl-10"
             />
           </div>
-          
+
           {/* Voice Status */}
           {/* {!isVoicesLoaded && (
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg max-w-md mx-auto">
@@ -954,7 +925,7 @@ export default function StudyPage() {
                               🇺🇸 English
                             </Button>
                           </div>
-                          
+
                           {/* Save Button */}
                           <Button
                             size="sm"
@@ -1103,6 +1074,9 @@ export default function StudyPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

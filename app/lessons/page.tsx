@@ -1,14 +1,33 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { BookOpen, Lock, Play, CheckCircle, Search, Filter, Star, Clock, Users, Trophy } from "lucide-react"
+import { useState } from "react";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
+import {
+  BookOpen,
+  Lock,
+  Play,
+  CheckCircle,
+  Search,
+  Filter,
+  Star,
+  Clock,
+  Users,
+  Trophy,
+} from "lucide-react";
 
 // Expanded lesson categories with all content from the PDF
 const allLessonCategories = [
@@ -23,7 +42,12 @@ const allLessonCategories = [
     difficulty: "Beginner",
     estimatedTime: "15 min",
     color: "bg-green-100 border-green-300",
-    topics: ["Konnichiwa", "Ohayou gozaimasu", "Arigatou gozaimasu", "Sumimasen"],
+    topics: [
+      "Konnichiwa",
+      "Ohayou gozaimasu",
+      "Arigatou gozaimasu",
+      "Sumimasen",
+    ],
   },
   {
     id: 2,
@@ -36,7 +60,12 @@ const allLessonCategories = [
     difficulty: "Beginner",
     estimatedTime: "20 min",
     color: "bg-blue-100 border-blue-300",
-    topics: ["A-I-U-E-O", "Ka-Ki-Ku-Ke-Ko", "Sa-Shi-Su-Se-So", "Combined characters"],
+    topics: [
+      "A-I-U-E-O",
+      "Ka-Ki-Ku-Ke-Ko",
+      "Sa-Shi-Su-Se-So",
+      "Combined characters",
+    ],
   },
   {
     id: 3,
@@ -207,72 +236,54 @@ const allLessonCategories = [
     color: "bg-lime-100 border-lime-300",
     topics: ["arimasu", "imasu", "arimasen", "imasen"],
   },
-]
+];
 
 export default function LessonsPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedDifficulty, setSelectedDifficulty] = useState("All")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("All");
 
   const filteredLessons = allLessonCategories.filter((lesson) => {
     const matchesSearch =
       lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lesson.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesDifficulty = selectedDifficulty === "All" || lesson.difficulty === selectedDifficulty
-    return matchesSearch && matchesDifficulty
-  })
+      lesson.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDifficulty =
+      selectedDifficulty === "All" || lesson.difficulty === selectedDifficulty;
+    return matchesSearch && matchesDifficulty;
+  });
 
-  const totalLessons = allLessonCategories.reduce((sum, cat) => sum + cat.totalLessons, 0)
-  const completedLessons = allLessonCategories.reduce((sum, cat) => sum + cat.completedLessons, 0)
-  const overallProgress = Math.round((completedLessons / totalLessons) * 100)
+  const totalLessons = allLessonCategories.reduce(
+    (sum, cat) => sum + cat.totalLessons,
+    0
+  );
+  const completedLessons = allLessonCategories.reduce(
+    (sum, cat) => sum + cat.completedLessons,
+    0
+  );
+  const overallProgress = Math.round((completedLessons / totalLessons) * 100);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">日</span>
-              </div>
-              <span className="text-xl font-bold text-gray-800">NihongoJourney</span>
-            </Link>
-          </div>
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/dashboard" className="text-gray-600 hover:text-red-500 transition-colors">
-              Dashboard
-            </Link>
-            <Link href="/lessons" className="text-red-500 font-medium">
-              Lessons
-            </Link>
-            <Link href="/study" className="text-gray-600 hover:text-red-500 transition-colors">
-              Study Notes
-            </Link>
-            <Link href="/community" className="text-gray-600 hover:text-red-500 transition-colors">
-              Community
-            </Link>
-          </nav>
-          <div className="flex items-center space-x-4">
-            <Avatar>
-              <AvatarImage src="/placeholder.svg?height=32&width=32" />
-              <AvatarFallback>YT</AvatarFallback>
-            </Avatar>
-          </div>
-        </div>
-      </header>
+      <Navbar showAuthButtons={false} userInitials="YT" />
 
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Japanese Lessons</h1>
-          <p className="text-xl text-gray-600 mb-6">Master Japanese through our comprehensive curriculum</p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+            Japanese Lessons
+          </h1>
+          <p className="text-xl text-gray-600 mb-6">
+            Master Japanese through our comprehensive curriculum
+          </p>
 
           {/* Overall Progress */}
           <Card className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold">Your Overall Progress</h3>
+                  <h3 className="text-lg font-semibold">
+                    Your Overall Progress
+                  </h3>
                   <p className="text-blue-100">
                     {completedLessons} of {totalLessons} lessons completed
                   </p>
@@ -318,7 +329,9 @@ export default function LessonsPage() {
           {filteredLessons.map((lesson) => (
             <Card
               key={lesson.id}
-              className={`${lesson.color} border-2 hover:shadow-lg transition-all ${
+              className={`${
+                lesson.color
+              } border-2 hover:shadow-lg transition-all ${
                 !lesson.isUnlocked ? "opacity-60" : ""
               }`}
             >
@@ -326,14 +339,24 @@ export default function LessonsPage() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="text-4xl">{lesson.icon}</div>
                   <div className="flex flex-col items-end space-y-1">
-                    <Badge variant={lesson.difficulty === "Beginner" ? "secondary" : "default"}>
+                    <Badge
+                      variant={
+                        lesson.difficulty === "Beginner"
+                          ? "secondary"
+                          : "default"
+                      }
+                    >
                       {lesson.difficulty}
                     </Badge>
-                    {!lesson.isUnlocked && <Lock className="w-4 h-4 text-gray-400" />}
+                    {!lesson.isUnlocked && (
+                      <Lock className="w-4 h-4 text-gray-400" />
+                    )}
                   </div>
                 </div>
                 <CardTitle className="text-lg">{lesson.title}</CardTitle>
-                <CardDescription className="text-sm">{lesson.description}</CardDescription>
+                <CardDescription className="text-sm">
+                  {lesson.description}
+                </CardDescription>
               </CardHeader>
 
               <CardContent>
@@ -354,24 +377,37 @@ export default function LessonsPage() {
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-medium">
-                        {lesson.completedLessons}/{lesson.totalLessons} completed
+                        {lesson.completedLessons}/{lesson.totalLessons}{" "}
+                        completed
                       </span>
-                      {lesson.completedLessons === lesson.totalLessons && lesson.totalLessons > 0 && (
-                        <Badge className="bg-green-500">
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Complete
-                        </Badge>
-                      )}
+                      {lesson.completedLessons === lesson.totalLessons &&
+                        lesson.totalLessons > 0 && (
+                          <Badge className="bg-green-500">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Complete
+                          </Badge>
+                        )}
                     </div>
-                    <Progress value={(lesson.completedLessons / lesson.totalLessons) * 100} className="h-2" />
+                    <Progress
+                      value={
+                        (lesson.completedLessons / lesson.totalLessons) * 100
+                      }
+                      className="h-2"
+                    />
                   </div>
 
                   {/* Topics Preview */}
                   <div>
-                    <p className="text-xs text-gray-600 mb-2">Topics covered:</p>
+                    <p className="text-xs text-gray-600 mb-2">
+                      Topics covered:
+                    </p>
                     <div className="flex flex-wrap gap-1">
                       {lesson.topics.slice(0, 3).map((topic, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="text-xs"
+                        >
                           {topic}
                         </Badge>
                       ))}
@@ -417,27 +453,36 @@ export default function LessonsPage() {
                 <Star className="w-4 h-4 text-yellow-500 mt-0.5" />
                 <div>
                   <p className="font-medium">Practice Daily</p>
-                  <p className="text-gray-600">Even 10 minutes a day helps build consistency</p>
+                  <p className="text-gray-600">
+                    Even 10 minutes a day helps build consistency
+                  </p>
                 </div>
               </div>
               <div className="flex items-start space-x-2">
                 <Users className="w-4 h-4 text-blue-500 mt-0.5" />
                 <div>
                   <p className="font-medium">Join Study Groups</p>
-                  <p className="text-gray-600">Practice with other learners in our community</p>
+                  <p className="text-gray-600">
+                    Practice with other learners in our community
+                  </p>
                 </div>
               </div>
               <div className="flex items-start space-x-2">
                 <BookOpen className="w-4 h-4 text-purple-500 mt-0.5" />
                 <div>
                   <p className="font-medium">Review Regularly</p>
-                  <p className="text-gray-600">Revisit completed lessons to reinforce learning</p>
+                  <p className="text-gray-600">
+                    Revisit completed lessons to reinforce learning
+                  </p>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
-  )
+  );
 }
