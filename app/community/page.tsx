@@ -43,7 +43,7 @@ export default function CommunityPage() {
   };
 
   return (
-    <AppLayout showAuthButtons={false}>
+    <AppLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Community</h1>

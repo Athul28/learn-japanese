@@ -1,48 +1,66 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Crown, Check, X, Zap, Download, BarChart3, HeadphonesIcon, Smartphone, Star } from "lucide-react"
-import { AppLayout } from "@/components/app-layout"
+import { useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Crown,
+  Check,
+  X,
+  Zap,
+  Download,
+  BarChart3,
+  HeadphonesIcon,
+  Smartphone,
+  Star,
+} from "lucide-react";
+import { AppLayout } from "@/components/app-layout";
 
 export default function SubscriptionPage() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const isSignup = searchParams.get("signup") === "true"
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const isSignup = searchParams.get("signup") === "true";
 
-  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly">("monthly")
-  const [isLoading, setIsLoading] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly">(
+    "monthly"
+  );
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubscribe = async (plan: "free" | "pro") => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     if (plan === "pro") {
       // In a real app, this would integrate with Stripe
-      alert("Redirecting to Stripe checkout...")
+      alert("Redirecting to Stripe checkout...");
       // Simulate successful payment
       setTimeout(() => {
-        router.push("/dashboard?upgraded=true")
-      }, 1000)
+        router.push("/dashboard?upgraded=true");
+      }, 1000);
     } else {
-      router.push("/dashboard")
+      router.push("/dashboard");
     }
 
-    setIsLoading(false)
-  }
+    setIsLoading(false);
+  };
 
-  const monthlyPrice = 9.99
-  const yearlyPrice = 99.99
-  const yearlyMonthlyPrice = yearlyPrice / 12
+  const monthlyPrice = 9.99;
+  const yearlyPrice = 99.99;
+  const yearlyMonthlyPrice = yearlyPrice / 12;
 
   return (
-    <AppLayout showAuthButtons={true}>
+    <AppLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Hero Section */}
@@ -54,7 +72,8 @@ export default function SubscriptionPage() {
               {isSignup ? "Choose Your Learning Plan" : "Upgrade to Pro"}
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Unlock unlimited lessons, offline mode, and personalized learning paths to master Japanese faster
+              Unlock unlimited lessons, offline mode, and personalized learning
+              paths to master Japanese faster
             </p>
           </div>
 
@@ -74,7 +93,10 @@ export default function SubscriptionPage() {
                 className="px-6"
               >
                 Yearly
-                <Badge variant="secondary" className="ml-2 bg-green-500 text-white">
+                <Badge
+                  variant="secondary"
+                  className="ml-2 bg-green-500 text-white"
+                >
                   Save 17%
                 </Badge>
               </Button>
@@ -88,7 +110,10 @@ export default function SubscriptionPage() {
               <CardHeader className="text-center pb-8">
                 <CardTitle className="text-2xl mb-2">Free</CardTitle>
                 <div className="text-4xl font-bold text-gray-800 mb-2">
-                  $0<span className="text-lg font-normal text-gray-600">/month</span>
+                  $0
+                  <span className="text-lg font-normal text-gray-600">
+                    /month
+                  </span>
                 </div>
                 <CardDescription>Perfect for getting started</CardDescription>
               </CardHeader>
@@ -108,7 +133,9 @@ export default function SubscriptionPage() {
                   </div>
                   <div className="flex items-center space-x-3">
                     <X className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-500">Unlimited lessons</span>
+                    <span className="text-sm text-gray-500">
+                      Unlimited lessons
+                    </span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <X className="w-4 h-4 text-gray-400" />
@@ -116,7 +143,9 @@ export default function SubscriptionPage() {
                   </div>
                   <div className="flex items-center space-x-3">
                     <X className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-500">Progress analytics</span>
+                    <span className="text-sm text-gray-500">
+                      Progress analytics
+                    </span>
                   </div>
                 </div>
                 <Separator />
@@ -140,31 +169,46 @@ export default function SubscriptionPage() {
                 </Badge>
               </div>
               <CardHeader className="text-center pb-8 pt-8">
-                <CardTitle className="text-2xl mb-2 text-yellow-600">Pro</CardTitle>
+                <CardTitle className="text-2xl mb-2 text-yellow-600">
+                  Pro
+                </CardTitle>
                 <div className="text-4xl font-bold text-gray-800 mb-2">
-                  ${selectedPlan === "monthly" ? monthlyPrice : yearlyMonthlyPrice.toFixed(2)}
-                  <span className="text-lg font-normal text-gray-600">/month</span>
+                  $
+                  {selectedPlan === "monthly"
+                    ? monthlyPrice
+                    : yearlyMonthlyPrice.toFixed(2)}
+                  <span className="text-lg font-normal text-gray-600">
+                    /month
+                  </span>
                 </div>
                 {selectedPlan === "yearly" && (
                   <div className="text-sm text-green-600">
                     Billed yearly at ${yearlyPrice}
                   </div>
                 )}
-                <CardDescription>Everything you need to master Japanese</CardDescription>
+                <CardDescription>
+                  Everything you need to master Japanese
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3">
                     <Check className="w-4 h-4 text-green-500" />
-                    <span className="text-sm font-medium">Unlimited lessons</span>
+                    <span className="text-sm font-medium">
+                      Unlimited lessons
+                    </span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Check className="w-4 h-4 text-green-500" />
-                    <span className="text-sm">All hiragana, katakana & kanji</span>
+                    <span className="text-sm">
+                      All hiragana, katakana & kanji
+                    </span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Check className="w-4 h-4 text-green-500" />
-                    <span className="text-sm">Grammar & conversation practice</span>
+                    <span className="text-sm">
+                      Grammar & conversation practice
+                    </span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Download className="w-4 h-4 text-blue-500" />
@@ -197,7 +241,8 @@ export default function SubscriptionPage() {
                   ) : (
                     <>
                       <Zap className="w-4 h-4 mr-2" />
-                      Start Pro {selectedPlan === "yearly" ? "Yearly" : "Monthly"}
+                      Start Pro{" "}
+                      {selectedPlan === "yearly" ? "Yearly" : "Monthly"}
                     </>
                   )}
                 </Button>
@@ -213,7 +258,8 @@ export default function SubscriptionPage() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Offline Learning</h3>
               <p className="text-gray-600">
-                Download lessons and study anywhere, even without internet connection
+                Download lessons and study anywhere, even without internet
+                connection
               </p>
             </div>
             <div className="text-center">
@@ -222,16 +268,20 @@ export default function SubscriptionPage() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Progress Tracking</h3>
               <p className="text-gray-600">
-                Detailed analytics to track your learning progress and identify areas to improve
+                Detailed analytics to track your learning progress and identify
+                areas to improve
               </p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <HeadphonesIcon className="w-8 h-8 text-purple-500" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Audio Pronunciation</h3>
+              <h3 className="text-xl font-semibold mb-2">
+                Audio Pronunciation
+              </h3>
               <p className="text-gray-600">
-                Native speaker audio for perfect pronunciation and listening comprehension
+                Native speaker audio for perfect pronunciation and listening
+                comprehension
               </p>
             </div>
           </div>
@@ -239,27 +289,35 @@ export default function SubscriptionPage() {
           {/* FAQ Section */}
           <Card className="bg-gray-50">
             <CardHeader>
-              <CardTitle className="text-center">Frequently Asked Questions</CardTitle>
+              <CardTitle className="text-center">
+                Frequently Asked Questions
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
                 <h4 className="font-semibold mb-2">Can I cancel anytime?</h4>
                 <p className="text-gray-600">
-                  Yes, you can cancel your subscription at any time. You'll continue to have Pro access until the end of your billing period.
+                  Yes, you can cancel your subscription at any time. You&apos;ll
+                  continue to have Pro access until the end of your billing
+                  period.
                 </p>
               </div>
               <Separator />
               <div>
                 <h4 className="font-semibold mb-2">Is there a free trial?</h4>
                 <p className="text-gray-600">
-                  Our free plan gives you access to basic features. You can upgrade to Pro anytime to unlock all features.
+                  Our free plan gives you access to basic features. You can
+                  upgrade to Pro anytime to unlock all features.
                 </p>
               </div>
               <Separator />
               <div>
-                <h4 className="font-semibold mb-2">What payment methods do you accept?</h4>
+                <h4 className="font-semibold mb-2">
+                  What payment methods do you accept?
+                </h4>
                 <p className="text-gray-600">
-                  We accept all major credit cards, PayPal, and Apple Pay through our secure payment processor.
+                  We accept all major credit cards, PayPal, and Apple Pay
+                  through our secure payment processor.
                 </p>
               </div>
             </CardContent>
@@ -267,5 +325,5 @@ export default function SubscriptionPage() {
         </div>
       </div>
     </AppLayout>
-  )
+  );
 }

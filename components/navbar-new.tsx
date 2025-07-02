@@ -54,10 +54,13 @@ export function Navbar() {
   return (
     <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        {/* Logo */}
         <Logo />
 
+        {/* Navigation */}
         <nav className="hidden md:flex items-center space-x-6">
           {navItems.map((item) => {
+            // Skip items based on auth state
             if (!isAuthenticated && item.authRequired) return null;
             if (isAuthenticated && item.hideForAuth) return null;
 
@@ -78,11 +81,13 @@ export function Navbar() {
           })}
         </nav>
 
+        {/* Auth Buttons or User Section */}
         <div className="flex items-center space-x-3">
           {isLoading ? (
             <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
           ) : isAuthenticated ? (
             <div className="flex items-center space-x-4">
+              {/* User Stats - you can add real stats from user data later */}
               <div className="flex items-center space-x-2">
                 <Flame className="w-5 h-5 text-orange-500" />
                 <span className="font-semibold">7</span>
@@ -92,6 +97,7 @@ export function Navbar() {
                 <span className="font-semibold">1250 XP</span>
               </div>
 
+              {/* User Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

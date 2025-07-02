@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -25,9 +27,8 @@ import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
-// Mock data - in real app this would come from your database
-const mockUser = {
-  name: "Yuki Tanaka",
+// Mock data for progress - in real app this would come from your database
+const mockUserProgress = {
   level: 12,
   xp: 2450,
   xpToNext: 500,
@@ -126,22 +127,43 @@ const lessonCategories = [
 
 export default function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const { data: session, status } = useSession();
+
+  // Redirect to login if not authenticated
+  if (status === "unauthenticated") {
+    redirect("/auth/login");
+  }
+
+  // Show loading state
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   const progressPercentage =
-    (mockUser.xp / (mockUser.xp + mockUser.xpToNext)) * 100;
+    (mockUserProgress.xp / (mockUserProgress.xp + mockUserProgress.xpToNext)) *
+    100;
+
+  const getUserInitials = () => {
+    if (!session?.user?.name) return "U";
+    return session.user.name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-green-50">
       {/* Header */}
-      <Navbar
-        showAuthButtons={false}
-        userInitials="YT"
-        showUserStats={true}
-        userStats={{
-          streak: mockUser.streak,
-          xp: mockUser.xp,
-        }}
-      />
+      <Navbar />
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -152,12 +174,21 @@ export default function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center space-x-3">
                   <Avatar className="w-12 h-12">
-                    <AvatarImage src="/placeholder.svg?height=48&width=48" />
-                    <AvatarFallback>YT</AvatarFallback>
+                    <AvatarImage
+                      src={
+                        session?.user?.image ||
+                        "/placeholder.svg?height=48&width=48"
+                      }
+                    />
+                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <CardTitle className="text-lg">{mockUser.name}</CardTitle>
-                    <CardDescription>Level {mockUser.level}</CardDescription>
+                    <CardTitle className="text-lg">
+                      {session?.user?.name || "User"}
+                    </CardTitle>
+                    <CardDescription>
+                      Level {mockUserProgress.level}
+                    </CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -165,9 +196,12 @@ export default function DashboardPage() {
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between text-sm mb-2">
-                      <span>Progress to Level {mockUser.level + 1}</span>
                       <span>
-                        {mockUser.xp}/{mockUser.xp + mockUser.xpToNext} XP
+                        Progress to Level {mockUserProgress.level + 1}
+                      </span>
+                      <span>
+                        {mockUserProgress.xp}/
+                        {mockUserProgress.xp + mockUserProgress.xpToNext} XP
                       </span>
                     </div>
                     <Progress value={progressPercentage} className="h-2" />
@@ -176,13 +210,13 @@ export default function DashboardPage() {
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
                       <div className="text-2xl font-bold text-orange-500">
-                        {mockUser.streak}
+                        {mockUserProgress.streak}
                       </div>
                       <div className="text-xs text-gray-600">Day Streak</div>
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-green-500">
-                        {mockUser.completedLessons}
+                        {mockUserProgress.completedLessons}
                       </div>
                       <div className="text-xs text-gray-600">Lessons Done</div>
                     </div>
@@ -192,7 +226,7 @@ export default function DashboardPage() {
             </Card>
 
             {/* Upgrade Card */}
-            {!mockUser.isPro && (
+            {!mockUserProgress.isPro && (
               <Card className="border-2 border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50">
                 <CardHeader>
                   <CardTitle className="flex items-center text-lg">
@@ -217,7 +251,7 @@ export default function DashboardPage() {
             {/* Quick Stats */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Today's Goal</CardTitle>
+                <CardTitle className="text-lg">Today&apos;s Goal</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -336,7 +370,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="font-medium">
-                        Completed "Japanese Greetings"
+                        Completed &quot;Japanese Greetings&quot;
                       </p>
                       <p className="text-sm text-gray-600">
                         Earned 100 XP • 2 hours ago

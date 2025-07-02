@@ -124,7 +124,7 @@ export default function LessonPage() {
   };
 
   return (
-    <AppLayout showAuthButtons={false}>
+    <AppLayout>
       {/* Lesson Header */}
       <div className="border-b bg-white/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">

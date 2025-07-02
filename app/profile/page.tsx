@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -30,15 +32,48 @@ import { AppLayout } from "@/components/app-layout";
 import { mockUserData } from "@/data/user-profile-content";
 
 export default function ProfilePage() {
+  const { data: session, status } = useSession();
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(mockUserData.name);
-  const [email, setEmail] = useState(mockUserData.email);
+  const [name, setName] = useState(session?.user?.name || mockUserData.name);
+  const [email, setEmail] = useState(
+    session?.user?.email || mockUserData.email
+  );
+
+  // Redirect if not authenticated
+  if (status === "loading") {
+    return (
+      <AppLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center py-12">
+              <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse mx-auto mb-4" />
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    redirect("/auth/login");
+  }
 
   const progressPercentage =
     (mockUserData.xp / (mockUserData.xp + mockUserData.xpToNext)) * 100;
 
+  const getUserInitials = () => {
+    if (!session?.user?.name) return "U";
+    return session.user.name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
-    <AppLayout showAuthButtons={false}>
+    <AppLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
@@ -55,12 +90,14 @@ export default function ProfilePage() {
                 <CardHeader className="text-center">
                   <div className="relative mx-auto w-24 h-24 mb-4">
                     <Avatar className="w-24 h-24">
-                      <AvatarImage src="/placeholder.svg?height=96&width=96" />
+                      <AvatarImage
+                        src={
+                          session?.user?.image ||
+                          "/placeholder.svg?height=96&width=96"
+                        }
+                      />
                       <AvatarFallback className="text-2xl">
-                        {mockUserData.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
+                        {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
                     <Button
@@ -71,9 +108,12 @@ export default function ProfilePage() {
                       <Upload className="w-3 h-3" />
                     </Button>
                   </div>
-                  <CardTitle className="text-xl">{mockUserData.name}</CardTitle>
+                  <CardTitle className="text-xl">
+                    {session?.user?.name || mockUserData.name}
+                  </CardTitle>
                   <CardDescription>
-                    Level {mockUserData.level} • Joined {mockUserData.joinDate}
+                    Level {mockUserData.level} • Joined{" "}
+                    {mockUserData.joinDate || "Recently"}
                   </CardDescription>
                   {mockUserData.isPro && (
                     <Badge className="bg-yellow-500 text-white mt-2">
@@ -179,7 +219,7 @@ export default function ProfilePage() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg">
-                        This Week's Activity
+                        This Week&apos;s Activity
                       </CardTitle>
                     </CardHeader>
                     <CardContent>

@@ -16,7 +16,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-green-50">
       {/* Header */}
-      <Navbar showAuthButtons={true} />
+      <Navbar />
 
       {/* Hero Section */}
       <section className="py-20 px-4">
@@ -179,7 +179,7 @@ export default function HomePage() {
               Choose Your Plan
             </h2>
             <p className="text-xl text-gray-600">
-              Start free, upgrade when you're ready
+              Start free, upgrade when you&apos;re ready
             </p>
           </div>
 
