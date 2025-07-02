@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
+import { useProgress } from "@/hooks/use-progress";
 import {
   Card,
   CardContent,
@@ -26,17 +27,6 @@ import {
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-
-// Mock data for progress - in real app this would come from your database
-const mockUserProgress = {
-  level: 12,
-  xp: 2450,
-  xpToNext: 500,
-  streak: 7,
-  totalLessons: 45,
-  completedLessons: 32,
-  isPro: false,
-};
 
 const lessonCategories = [
   {
@@ -128,14 +118,18 @@ const lessonCategories = [
 export default function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const { data: session, status } = useSession();
-
-  // Redirect to login if not authenticated
-  if (status === "unauthenticated") {
-    redirect("/auth/login");
-  }
+  const {
+    userProgress,
+    lessonProgress,
+    loading,
+    error,
+    updateProgress,
+    updateLessonProgress,
+    isAuthenticated,
+  } = useProgress();
 
   // Show loading state
-  if (status === "loading") {
+  if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-green-50 flex items-center justify-center">
         <div className="text-center">
@@ -146,18 +140,47 @@ export default function DashboardPage() {
     );
   }
 
-  const progressPercentage =
-    (mockUserProgress.xp / (mockUserProgress.xp + mockUserProgress.xpToNext)) *
-    100;
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error loading progress: {error}</p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate XP needed for next level
+  const xpForCurrentLevel = (userProgress.level - 1) * 500;
+  const xpForNextLevel = userProgress.level * 500;
+  const xpProgress = userProgress.xp - xpForCurrentLevel;
+  const xpNeeded = xpForNextLevel - xpForCurrentLevel;
+  const progressPercentage = xpNeeded > 0 ? (xpProgress / xpNeeded) * 100 : 0;
+
+  // Calculate daily goal progress
+  const dailyGoalProgress =
+    userProgress.dailyGoal > 0
+      ? (userProgress.completedLessons / userProgress.dailyGoal) * 100
+      : 0;
 
   const getUserInitials = () => {
-    if (!session?.user?.name) return "U";
-    return session.user.name
+    const name = getDisplayName();
+    if (name === "Guest User") return "GU";
+    return name
       .split(" ")
       .map((n) => n[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const getDisplayName = () => {
+    if (isAuthenticated && session?.user?.name) {
+      return session.user.name;
+    }
+    return "Guest User";
   };
 
   return (
@@ -169,6 +192,31 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar - Progress & Stats */}
           <div className="lg:col-span-1 space-y-6">
+            {/* Guest User Notice */}
+            {!isAuthenticated && (
+              <Card className="border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50">
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">👋</div>
+                    <p className="text-sm text-blue-800 font-medium mb-2">
+                      Welcome, Guest!
+                    </p>
+                    <p className="text-xs text-blue-700 mb-3">
+                      Your progress is saved locally. Sign up to sync across
+                      devices!
+                    </p>
+                    <Button
+                      size="sm"
+                      asChild
+                      className="bg-blue-500 hover:bg-blue-600"
+                    >
+                      <Link href="/auth/signup">Create Account</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* User Progress Card */}
             <Card>
               <CardHeader>
@@ -183,11 +231,16 @@ export default function DashboardPage() {
                     <AvatarFallback>{getUserInitials()}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <CardTitle className="text-lg">
-                      {session?.user?.name || "User"}
+                    <CardTitle className="text-lg flex items-center">
+                      {getDisplayName()}
+                      {!isAuthenticated && (
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          Guest
+                        </Badge>
+                      )}
                     </CardTitle>
                     <CardDescription>
-                      Level {mockUserProgress.level}
+                      Level {userProgress.level}
                     </CardDescription>
                   </div>
                 </div>
@@ -196,12 +249,9 @@ export default function DashboardPage() {
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between text-sm mb-2">
+                      <span>Progress to Level {userProgress.level + 1}</span>
                       <span>
-                        Progress to Level {mockUserProgress.level + 1}
-                      </span>
-                      <span>
-                        {mockUserProgress.xp}/
-                        {mockUserProgress.xp + mockUserProgress.xpToNext} XP
+                        {xpProgress}/{xpNeeded} XP
                       </span>
                     </div>
                     <Progress value={progressPercentage} className="h-2" />
@@ -210,13 +260,13 @@ export default function DashboardPage() {
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
                       <div className="text-2xl font-bold text-orange-500">
-                        {mockUserProgress.streak}
+                        {userProgress.streak}
                       </div>
                       <div className="text-xs text-gray-600">Day Streak</div>
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-green-500">
-                        {mockUserProgress.completedLessons}
+                        {userProgress.completedLessons}
                       </div>
                       <div className="text-xs text-gray-600">Lessons Done</div>
                     </div>
@@ -226,7 +276,7 @@ export default function DashboardPage() {
             </Card>
 
             {/* Upgrade Card */}
-            {!mockUserProgress.isPro && (
+            {!userProgress.isProMember && (
               <Card className="border-2 border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50">
                 <CardHeader>
                   <CardTitle className="flex items-center text-lg">
@@ -257,11 +307,26 @@ export default function DashboardPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Lessons completed</span>
-                    <span className="text-sm font-semibold">3/5</span>
+                    <span className="text-sm font-semibold">
+                      {userProgress.completedLessons}/{userProgress.dailyGoal}
+                    </span>
                   </div>
-                  <Progress value={60} className="h-2" />
+                  <Progress
+                    value={Math.min(dailyGoalProgress, 100)}
+                    className="h-2"
+                  />
                   <p className="text-xs text-gray-600">
-                    2 more lessons to reach your daily goal!
+                    {userProgress.completedLessons >= userProgress.dailyGoal
+                      ? "🎉 Daily goal achieved!"
+                      : `${
+                          userProgress.dailyGoal - userProgress.completedLessons
+                        } more lesson${
+                          userProgress.dailyGoal -
+                            userProgress.completedLessons ===
+                          1
+                            ? ""
+                            : "s"
+                        } to reach your daily goal!`}
                   </p>
                 </div>
               </CardContent>
@@ -364,30 +429,59 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-medium">
-                        Completed &quot;Japanese Greetings&quot;
+                  {lessonProgress.length > 0 ? (
+                    <>
+                      {lessonProgress
+                        .filter((p) => p.status === "COMPLETED")
+                        .slice(0, 2)
+                        .map((progress, index) => (
+                          <div
+                            key={progress.lessonId}
+                            className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg"
+                          >
+                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                              <CheckCircle className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Completed Lesson</p>
+                              <p className="text-sm text-gray-600">
+                                Score: {progress.score || 0}% •{" "}
+                                {progress.completedAt
+                                  ? new Date(
+                                      progress.completedAt
+                                    ).toLocaleDateString()
+                                  : "Recently"}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      {userProgress.streak > 0 && (
+                        <div className="flex items-center space-x-3 p-3 bg-orange-50 rounded-lg">
+                          <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                            <Flame className="w-4 h-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-medium">
+                              {userProgress.streak}-day streak!
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Keep it up! • Today
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-6">
+                      <div className="text-gray-400 mb-2">
+                        <Trophy className="w-12 h-12 mx-auto" />
+                      </div>
+                      <p className="text-gray-600">No achievements yet</p>
+                      <p className="text-sm text-gray-500">
+                        Complete your first lesson to get started!
                       </p>
-                      <p className="text-sm text-gray-600">
-                        Earned 100 XP • 2 hours ago
-                      </p>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-orange-50 rounded-lg">
-                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                      <Flame className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-medium">7-day streak!</p>
-                      <p className="text-sm text-gray-600">
-                        Keep it up! • Today
-                      </p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

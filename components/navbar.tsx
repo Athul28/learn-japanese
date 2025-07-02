@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { useProgress } from "@/hooks/use-progress";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -19,8 +20,9 @@ import Logo from "@/components/logo";
 export function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const { userProgress, loading: progressLoading } = useProgress();
   const isAuthenticated = status === "authenticated";
-  const isLoading = status === "loading";
+  const isLoading = status === "loading" || progressLoading;
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard", authRequired: true },
@@ -50,6 +52,10 @@ export function Navbar() {
       .toUpperCase()
       .slice(0, 2);
   };
+
+  // Show real progress data or fallback values
+  const displayStreak = userProgress?.streak ?? 0;
+  const displayXP = userProgress?.xp ?? 0;
 
   return (
     <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
@@ -85,11 +91,11 @@ export function Navbar() {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <Flame className="w-5 h-5 text-orange-500" />
-                <span className="font-semibold">7</span>
+                <span className="font-semibold">{displayStreak}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Star className="w-5 h-5 text-yellow-500" />
-                <span className="font-semibold">1250 XP</span>
+                <span className="font-semibold">{displayXP} XP</span>
               </div>
 
               <DropdownMenu>

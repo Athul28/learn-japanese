@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useProgress } from "@/hooks/use-progress";
+import { getAllLessons } from "@/data/sample-lessons";
 import {
   Card,
   CardContent,
@@ -13,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import {
@@ -241,6 +243,10 @@ const allLessonCategories = [
 export default function LessonsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
+  const { lessonProgress } = useProgress();
+
+  // Get interactive lessons
+  const interactiveLessons = getAllLessons();
 
   const filteredLessons = allLessonCategories.filter((lesson) => {
     const matchesSearch =
@@ -260,6 +266,12 @@ export default function LessonsPage() {
     0
   );
   const overallProgress = Math.round((completedLessons / totalLessons) * 100);
+
+  // Get lesson progress status
+  const getLessonStatus = (lessonId: string) => {
+    const progress = lessonProgress.find((p) => p.lessonId === lessonId);
+    return progress?.status || "NOT_STARTED";
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -298,191 +310,291 @@ export default function LessonsPage() {
           </Card>
         </div>
 
-        {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Search lessons..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+        {/* Interactive Lessons Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">
+              Interactive Lessons
+            </h2>
+            <Badge variant="secondary" className="bg-green-100 text-green-800">
+              New Feature
+            </Badge>
           </div>
-          <div className="flex items-center space-x-2">
-            <Filter className="w-4 h-4 text-gray-500" />
-            <select
-              value={selectedDifficulty}
-              onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md bg-white"
-            >
-              <option value="All">All Levels</option>
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
-            </select>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {interactiveLessons.map((lesson) => {
+              const status = getLessonStatus(lesson.id);
+              const isCompleted = status === "COMPLETED";
+              const isInProgress = status === "IN_PROGRESS";
+
+              return (
+                <Card
+                  key={lesson.id}
+                  className="border-2 hover:shadow-lg transition-all"
+                >
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="text-2xl">📚</div>
+                        <div>
+                          <CardTitle className="text-lg">
+                            {lesson.title}
+                          </CardTitle>
+                          <CardDescription>
+                            {lesson.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                      {isCompleted && (
+                        <CheckCircle className="w-6 h-6 text-green-500" />
+                      )}
+                    </div>
+                  </CardHeader>
+
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between text-sm text-gray-600">
+                        <div className="flex items-center space-x-1">
+                          <BookOpen className="w-4 h-4" />
+                          <span>{lesson.questions.length} questions</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Star className="w-4 h-4 text-yellow-500" />
+                          <span>+{lesson.xpReward} XP</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <Badge
+                          variant={
+                            isCompleted
+                              ? "default"
+                              : isInProgress
+                              ? "secondary"
+                              : "outline"
+                          }
+                          className={
+                            isCompleted
+                              ? "bg-green-500 text-white"
+                              : isInProgress
+                              ? "bg-yellow-500 text-white"
+                              : ""
+                          }
+                        >
+                          {isCompleted
+                            ? "Completed"
+                            : isInProgress
+                            ? "In Progress"
+                            : "Not Started"}
+                        </Badge>
+
+                        <Button asChild>
+                          <Link href={`/lesson/${lesson.id}`}>
+                            <Play className="w-4 h-4 mr-2" />
+                            {isCompleted ? "Review" : "Start"}
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
 
-        {/* Lessons Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredLessons.map((lesson) => (
-            <Card
-              key={lesson.id}
-              className={`${
-                lesson.color
-              } border-2 hover:shadow-lg transition-all ${
-                !lesson.isUnlocked ? "opacity-60" : ""
-              }`}
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between mb-2">
-                  <div className="text-4xl">{lesson.icon}</div>
-                  <div className="flex flex-col items-end space-y-1">
-                    <Badge
-                      variant={
-                        lesson.difficulty === "Beginner"
-                          ? "secondary"
-                          : "default"
-                      }
-                    >
-                      {lesson.difficulty}
-                    </Badge>
-                    {!lesson.isUnlocked && (
-                      <Lock className="w-4 h-4 text-gray-400" />
-                    )}
-                  </div>
-                </div>
-                <CardTitle className="text-lg">{lesson.title}</CardTitle>
-                <CardDescription className="text-sm">
-                  {lesson.description}
-                </CardDescription>
-              </CardHeader>
+        {/* Lesson Categories */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            All Lesson Categories
+          </h2>
 
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Lesson Stats */}
-                  <div className="flex items-center justify-between text-sm text-gray-600">
-                    <div className="flex items-center space-x-1">
-                      <BookOpen className="w-4 h-4" />
-                      <span>{lesson.totalLessons} lessons</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{lesson.estimatedTime}</span>
-                    </div>
-                  </div>
+          {/* Search and Filter */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search lessons..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <select
+                value={selectedDifficulty}
+                onChange={(e) => setSelectedDifficulty(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md bg-white"
+              >
+                <option value="All">All Levels</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </div>
+          </div>
 
-                  {/* Progress */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium">
-                        {lesson.completedLessons}/{lesson.totalLessons}{" "}
-                        completed
-                      </span>
-                      {lesson.completedLessons === lesson.totalLessons &&
-                        lesson.totalLessons > 0 && (
-                          <Badge className="bg-green-500">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Complete
-                          </Badge>
-                        )}
-                    </div>
-                    <Progress
-                      value={
-                        (lesson.completedLessons / lesson.totalLessons) * 100
-                      }
-                      className="h-2"
-                    />
-                  </div>
-
-                  {/* Topics Preview */}
-                  <div>
-                    <p className="text-xs text-gray-600 mb-2">
-                      Topics covered:
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {lesson.topics.slice(0, 3).map((topic, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="text-xs"
-                        >
-                          {topic}
-                        </Badge>
-                      ))}
-                      {lesson.topics.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{lesson.topics.length - 3} more
-                        </Badge>
+          {/* Lessons Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredLessons.map((lesson) => (
+              <Card
+                key={lesson.id}
+                className={`${
+                  lesson.color
+                } border-2 hover:shadow-lg transition-all ${
+                  !lesson.isUnlocked ? "opacity-60" : ""
+                }`}
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="text-4xl">{lesson.icon}</div>
+                    <div className="flex flex-col items-end space-y-1">
+                      <Badge
+                        variant={
+                          lesson.difficulty === "Beginner"
+                            ? "secondary"
+                            : "default"
+                        }
+                      >
+                        {lesson.difficulty}
+                      </Badge>
+                      {!lesson.isUnlocked && (
+                        <Lock className="w-4 h-4 text-gray-400" />
                       )}
                     </div>
                   </div>
+                  <CardTitle className="text-lg">{lesson.title}</CardTitle>
+                  <CardDescription className="text-sm">
+                    {lesson.description}
+                  </CardDescription>
+                </CardHeader>
 
-                  {/* Action Button */}
-                  {lesson.isUnlocked ? (
-                    <Button className="w-full" asChild>
-                      <Link href={`/lesson/${lesson.id}`}>
-                        <Play className="w-4 h-4 mr-2" />
-                        {lesson.completedLessons === 0 ? "Start" : "Continue"}
-                      </Link>
-                    </Button>
-                  ) : (
-                    <Button className="w-full" disabled>
-                      <Lock className="w-4 h-4 mr-2" />
-                      Locked
-                    </Button>
-                  )}
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Lesson Stats */}
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <div className="flex items-center space-x-1">
+                        <BookOpen className="w-4 h-4" />
+                        <span>{lesson.totalLessons} lessons</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Clock className="w-4 h-4" />
+                        <span>{lesson.estimatedTime}</span>
+                      </div>
+                    </div>
+
+                    {/* Progress */}
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium">
+                          {lesson.completedLessons}/{lesson.totalLessons}{" "}
+                          completed
+                        </span>
+                        {lesson.completedLessons === lesson.totalLessons &&
+                          lesson.totalLessons > 0 && (
+                            <Badge className="bg-green-500">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Complete
+                            </Badge>
+                          )}
+                      </div>
+                      <Progress
+                        value={
+                          (lesson.completedLessons / lesson.totalLessons) * 100
+                        }
+                        className="h-2"
+                      />
+                    </div>
+
+                    {/* Topics Preview */}
+                    <div>
+                      <p className="text-xs text-gray-600 mb-2">
+                        Topics covered:
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {lesson.topics.slice(0, 3).map((topic, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs"
+                          >
+                            {topic}
+                          </Badge>
+                        ))}
+                        {lesson.topics.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{lesson.topics.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Button */}
+                    {lesson.isUnlocked ? (
+                      <Button className="w-full" asChild>
+                        <Link href={`/lesson/${lesson.id}`}>
+                          <Play className="w-4 h-4 mr-2" />
+                          {lesson.completedLessons === 0 ? "Start" : "Continue"}
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button className="w-full" disabled>
+                        <Lock className="w-4 h-4 mr-2" />
+                        Locked
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Study Tips */}
+          <Card className="mt-12 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+            <CardHeader>
+              <CardTitle className="flex items-center text-green-700">
+                <Trophy className="w-5 h-5 mr-2" />
+                Study Tips for Success
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div className="flex items-start space-x-2">
+                  <Star className="w-4 h-4 text-yellow-500 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Practice Daily</p>
+                    <p className="text-gray-600">
+                      Even 10 minutes a day helps build consistency
+                    </p>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+                <div className="flex items-start space-x-2">
+                  <Users className="w-4 h-4 text-blue-500 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Join Study Groups</p>
+                    <p className="text-gray-600">
+                      Practice with other learners in our community
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <BookOpen className="w-4 h-4 text-purple-500 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Review Regularly</p>
+                    <p className="text-gray-600">
+                      Revisit completed lessons to reinforce learning
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Study Tips */}
-        <Card className="mt-12 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
-          <CardHeader>
-            <CardTitle className="flex items-center text-green-700">
-              <Trophy className="w-5 h-5 mr-2" />
-              Study Tips for Success
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div className="flex items-start space-x-2">
-                <Star className="w-4 h-4 text-yellow-500 mt-0.5" />
-                <div>
-                  <p className="font-medium">Practice Daily</p>
-                  <p className="text-gray-600">
-                    Even 10 minutes a day helps build consistency
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-2">
-                <Users className="w-4 h-4 text-blue-500 mt-0.5" />
-                <div>
-                  <p className="font-medium">Join Study Groups</p>
-                  <p className="text-gray-600">
-                    Practice with other learners in our community
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-2">
-                <BookOpen className="w-4 h-4 text-purple-500 mt-0.5" />
-                <div>
-                  <p className="font-medium">Review Regularly</p>
-                  <p className="text-gray-600">
-                    Revisit completed lessons to reinforce learning
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Footer */}
       </div>
-
-      {/* Footer */}
-      <Footer />
+        <Footer />
     </div>
   );
 }
