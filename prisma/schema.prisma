@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "cockroachdb"
   url      = env("DATABASE_URL")
 }
 
@@ -17,25 +17,25 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
-  password      String?   // For credential auth
+  password      String? // For credential auth
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   // User profile data
-  level            Int      @default(1)
-  xp               Int      @default(0)
-  streak           Int      @default(0)
-  longestStreak    Int      @default(0)
-  totalStudyTime   Int      @default(0) // in minutes
-  joinDate         DateTime @default(now())
-  isProMember      Boolean  @default(false)
-  proExpiresAt     DateTime?
-  
+  level          Int       @default(1)
+  xp             Int       @default(0)
+  streak         Int       @default(0)
+  longestStreak  Int       @default(0)
+  totalStudyTime Int       @default(0) // in minutes
+  joinDate       DateTime  @default(now())
+  isProMember    Boolean   @default(false)
+  proExpiresAt   DateTime?
+
   // Learning preferences
-  dailyGoal        Int      @default(5) // lessons per day
-  reminderTime     String?  // "09:00"
-  preferredVoice   String   @default("female")
-  studyLanguages   String[] @default(["hiragana", "katakana"])
+  dailyGoal      Int      @default(5) // lessons per day
+  reminderTime   String? // "09:00"
+  preferredVoice String   @default("female")
+  studyLanguages String[] @default(["hiragana", "katakana"])
 
   // Relations
   accounts         Account[]
@@ -58,12 +58,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -108,40 +108,38 @@ model Category {
 }
 
 model Lesson {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
   description String?
-  content     Json     // Stores lesson questions and content
-  order       Int      @default(0)
+  content     Json // Stores lesson questions and content
+  order       Int        @default(0)
   difficulty  Difficulty @default(BEGINNER)
-  xpReward    Int      @default(10)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  xpReward    Int        @default(10)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
-
-  progress LessonProgress[]
 
   @@map("lessons")
 }
 
 model LessonProgress {
-  id            String     @id @default(cuid())
+  id            String       @id @default(cuid())
   userId        String
-  lessonId      String
+  lessonId      String // Can be lesson ID or category ID (e.g., "category-1")
   status        LessonStatus @default(NOT_STARTED)
-  score         Int?       // 0-100
-  timeSpent     Int        @default(0) // in seconds
-  attempts      Int        @default(0)
+  score         Int? // 0-100
+  timeSpent     Int          @default(0) // in seconds
+  attempts      Int          @default(0)
   lastAttemptAt DateTime?
   completedAt   DateTime?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Note: lessonId can reference lessons OR be a category identifier
 
   @@unique([userId, lessonId])
   @@map("lesson_progress")
@@ -149,31 +147,31 @@ model LessonProgress {
 
 // Vocabulary and study materials
 model VocabularyItem {
-  id          String     @id @default(cuid())
-  japanese    String
-  romaji      String
-  english     String
-  category    VocabCategory
-  difficulty  Difficulty @default(BEGINNER)
-  image       String?
-  audio       String?
-  memoryTip   String?
-  context     String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id         String        @id @default(cuid())
+  japanese   String
+  romaji     String
+  english    String
+  category   VocabCategory
+  difficulty Difficulty    @default(BEGINNER)
+  image      String?
+  audio      String?
+  memoryTip  String?
+  context    String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   @@map("vocabulary_items")
 }
 
 // Study sessions for tracking daily activity
 model StudySession {
-  id        String   @id @default(cuid())
-  userId    String
-  date      DateTime @db.Date
-  duration  Int      // in minutes
-  xpEarned  Int      @default(0)
-  lessonsCompleted Int @default(0)
-  createdAt DateTime @default(now())
+  id               String   @id @default(cuid())
+  userId           String
+  date             DateTime @db.Date
+  duration         Int // in minutes
+  xpEarned         Int      @default(0)
+  lessonsCompleted Int      @default(0)
+  createdAt        DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -183,16 +181,16 @@ model StudySession {
 
 // Achievement system
 model Achievement {
-  id          String   @id @default(cuid())
-  name        String   @unique
+  id          String              @id @default(cuid())
+  name        String              @unique
   description String
   icon        String?
   category    AchievementCategory
-  requirement Json     // Stores requirement criteria
-  xpReward    Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  requirement Json // Stores requirement criteria
+  xpReward    Int                 @default(0)
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 
   userAchievements UserAchievement[]
 
@@ -214,15 +212,15 @@ model UserAchievement {
 
 // Community features
 model StudyGroup {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   name        String
   description String?
   level       Difficulty @default(BEGINNER)
-  isPublic    Boolean  @default(true)
-  maxMembers  Int      @default(100)
+  isPublic    Boolean    @default(true)
+  maxMembers  Int        @default(100)
   createdBy   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   members  StudyGroupMember[]
   messages CommunityMessage[]
@@ -231,11 +229,11 @@ model StudyGroup {
 }
 
 model StudyGroupMember {
-  id          String           @id @default(cuid())
-  userId      String
+  id           String         @id @default(cuid())
+  userId       String
   studyGroupId String
-  role        StudyGroupRole   @default(MEMBER)
-  joinedAt    DateTime         @default(now())
+  role         StudyGroupRole @default(MEMBER)
+  joinedAt     DateTime       @default(now())
 
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   studyGroup StudyGroup @relation(fields: [studyGroupId], references: [id], onDelete: Cascade)
@@ -249,25 +247,25 @@ model CommunityMessage {
   content      String
   userId       String
   studyGroupId String?
-  parentId     String?  // For replies
+  parentId     String? // For replies
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  studyGroup StudyGroup?         @relation(fields: [studyGroupId], references: [id], onDelete: Cascade)
-  parent     CommunityMessage?   @relation("MessageReplies", fields: [parentId], references: [id])
-  replies    CommunityMessage[]  @relation("MessageReplies")
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studyGroup StudyGroup?        @relation(fields: [studyGroupId], references: [id], onDelete: Cascade)
+  parent     CommunityMessage?  @relation("MessageReplies", fields: [parentId], references: [id])
+  replies    CommunityMessage[] @relation("MessageReplies")
   reactions  MessageReaction[]
 
   @@map("community_messages")
 }
 
 model MessageReaction {
-  id        String      @id @default(cuid())
+  id        String       @id @default(cuid())
   userId    String
   messageId String
   type      ReactionType
-  createdAt DateTime    @default(now())
+  createdAt DateTime     @default(now())
 
   user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   message CommunityMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
@@ -278,17 +276,17 @@ model MessageReaction {
 
 // Subscription and payment
 model Subscription {
-  id              String            @id @default(cuid())
-  userId          String
-  plan            SubscriptionPlan
-  status          SubscriptionStatus @default(ACTIVE)
-  currentPeriodStart DateTime
-  currentPeriodEnd   DateTime
-  cancelAtPeriodEnd  Boolean        @default(false)
-  stripeCustomerId   String?
+  id                   String             @id @default(cuid())
+  userId               String
+  plan                 SubscriptionPlan
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
+  stripeCustomerId     String?
   stripeSubscriptionId String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

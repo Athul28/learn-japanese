@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { lessonId, status, score, timeSpent } = body;
+    const { lessonId, status, score, timeSpent, questionResults } = body;
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
@@ -59,12 +59,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const lesson = await prisma.lesson.findUnique({
-      where: { id: lessonId },
-    });
+    // Handle both interactive lessons and category lessons
+    let lesson = null;
+    let xpReward = 25; // Default XP for interactive lessons
 
-    if (!lesson) {
-      return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
+    if (lessonId.startsWith("category-")) {
+      // This is a category lesson progress update
+      const categoryId = parseInt(lessonId.replace("category-", ""));
+      const lessonCategories = [
+        { id: 1, title: "Japanese Greetings", xpReward: 100 },
+        { id: 2, title: "Hiragana Mastery", xpReward: 150 },
+        { id: 3, title: "Na-Adjectives", xpReward: 80 },
+        { id: 4, title: "I-Adjectives", xpReward: 80 },
+        { id: 5, title: "Body Parts", xpReward: 60 },
+        // Add more categories as needed
+      ];
+
+      const category = lessonCategories.find((cat) => cat.id === categoryId);
+      if (category) {
+        xpReward = category.xpReward;
+      }
+    } else {
+      // This is an interactive lesson
+      lesson = await prisma.lesson.findUnique({
+        where: { id: lessonId },
+      });
+
+      if (lesson) {
+        xpReward = lesson.xpReward;
+      }
     }
 
     const now = new Date();
@@ -101,7 +124,7 @@ export async function POST(request: NextRequest) {
 
     // If lesson is completed, award XP
     if (isCompleted) {
-      const xpEarned = lesson.xpReward;
+      const xpEarned = xpReward;
 
       // Update user progress through the progress API
       await fetch(`${process.env.NEXTAUTH_URL}/api/user/progress`, {

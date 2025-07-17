@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { useProgress } from "@/hooks/use-progress";
+import { useProgressData } from "@/hooks/use-progress-data";
 import { getAllLessons } from "@/data/sample-lessons";
 import {
   Card,
@@ -18,6 +20,7 @@ import { Input } from "@/components/ui/input";
 // import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { ApiDebugger } from "@/components/api-debugger";
 import {
   BookOpen,
   Lock,
@@ -240,15 +243,154 @@ const allLessonCategories = [
   },
 ];
 
+// Helper functions to map category data
+const getDescriptionForCategory = (id: number) => {
+  const descriptions: { [key: number]: string } = {
+    1: "Essential daily greetings and polite expressions",
+    2: "Complete hiragana writing system with romaji",
+    3: "Descriptive na-adjectives: genki, suki, kirei",
+    4: "Essential i-adjectives: atsui, furui, takai",
+    5: "Learn vocabulary for body parts: atama, me, te",
+    6: "Essential action words: ikimasu, tabemasu, shimasu",
+    7: "Master present, negative, past, and past negative forms",
+    8: "Master wa, ga, o, ni, de, and more particles",
+    9: "Learn color vocabulary: aka, shiro, kuro, ao",
+    10: "Family vocabulary: chichi, haha, ani, imouto",
+    11: "Numbers 1-10000 in kanji with readings",
+    12: "Days of week and monthly dates",
+    13: "Food items: onigiri, yasai, niku, sakana",
+    14: "Common phrases: tadaima, okaerinasai, itte kimasu",
+    15: "Learn aru and iru for existence of things and people",
+  };
+  return descriptions[id] || "Learn essential Japanese concepts";
+};
+
+const getIconForCategory = (id: number) => {
+  const icons: { [key: number]: string } = {
+    1: "👋",
+    2: "あ",
+    3: "✨",
+    4: "🌡️",
+    5: "👤",
+    6: "⚡",
+    7: "🔄",
+    8: "🔗",
+    9: "🎨",
+    10: "👨‍👩‍👧‍👦",
+    11: "🔢",
+    12: "📅",
+    13: "🍱",
+    14: "💬",
+    15: "📍",
+  };
+  return icons[id] || "📚";
+};
+
+const getEstimatedTimeForCategory = (id: number) => {
+  const times: { [key: number]: string } = {
+    1: "15 min",
+    2: "20 min",
+    3: "12 min",
+    4: "12 min",
+    5: "10 min",
+    6: "18 min",
+    7: "25 min",
+    8: "30 min",
+    9: "8 min",
+    10: "10 min",
+    11: "20 min",
+    12: "15 min",
+    13: "12 min",
+    14: "18 min",
+    15: "15 min",
+  };
+  return times[id] || "15 min";
+};
+
+const getColorForCategory = (id: number) => {
+  const colors: { [key: number]: string } = {
+    1: "bg-green-100 border-green-300",
+    2: "bg-blue-100 border-blue-300",
+    3: "bg-purple-100 border-purple-300",
+    4: "bg-orange-100 border-orange-300",
+    5: "bg-yellow-100 border-yellow-300",
+    6: "bg-red-100 border-red-300",
+    7: "bg-indigo-100 border-indigo-300",
+    8: "bg-pink-100 border-pink-300",
+    9: "bg-rose-100 border-rose-300",
+    10: "bg-emerald-100 border-emerald-300",
+    11: "bg-cyan-100 border-cyan-300",
+    12: "bg-violet-100 border-violet-300",
+    13: "bg-amber-100 border-amber-300",
+    14: "bg-teal-100 border-teal-300",
+    15: "bg-lime-100 border-lime-300",
+  };
+  return colors[id] || "bg-gray-100 border-gray-300";
+};
+
+const getTopicsForCategory = (id: number) => {
+  const topics: { [key: number]: string[] } = {
+    1: ["Konnichiwa", "Ohayou gozaimasu", "Arigatou gozaimasu", "Sumimasen"],
+    2: [
+      "A-I-U-E-O",
+      "Ka-Ki-Ku-Ke-Ko",
+      "Sa-Shi-Su-Se-So",
+      "Combined characters",
+    ],
+    3: ["genki", "suki/kirai", "jouzu/heta", "kirei", "shizuka"],
+    4: ["atsui/samui", "takai/yasui", "ooki/chiisai", "ii/warui"],
+    5: ["atama", "kao", "te", "ashi", "me", "mimi"],
+    6: ["ikimasu/kimasu", "tabemasu/nomimasu", "shimasu", "mimasu"],
+    7: ["masu form", "masen form", "mashita form", "masen deshita"],
+    8: ["wa particle", "ga particle", "o particle", "ni/de particles"],
+    9: ["aka", "shiro", "kuro", "ao", "midori", "ki"],
+    10: ["chichi/haha", "ani/ane", "otouto/imouto", "ojisan/obasan"],
+    11: ["1-10", "11-100", "100-1000", "10000+"],
+    12: ["getsuyoubi", "tsuitachi", "futsuka", "dates"],
+    13: ["onigiri", "yasai", "niku", "sakana", "tamago"],
+    14: ["tadaima", "okaerinasai", "itte kimasu", "wakarimashita"],
+    15: ["arimasu", "imasu", "arimasen", "imasen"],
+  };
+  return topics[id] || ["Basic concepts"];
+};
+
 export default function LessonsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
-  const { lessonProgress } = useProgress();
+  const { data: session } = useSession();
+  const { lessonProgress } = useProgress(); // For guest users
+  const {
+    progressOverview,
+    categoryProgress,
+    loading,
+    isAuthenticated,
+    getLessonStatus: getAuthenticatedLessonStatus,
+    getCategoryProgress,
+    updateCategoryProgress,
+  } = useProgressData(); // For authenticated users
 
   // Get interactive lessons
   const interactiveLessons = getAllLessons();
 
-  const filteredLessons = allLessonCategories.filter((lesson) => {
+  // Use dynamic progress data based on authentication status
+  const lessonCategories =
+    isAuthenticated && categoryProgress.length > 0
+      ? categoryProgress.map((cat) => ({
+          id: cat.id,
+          title: cat.title,
+          description: getDescriptionForCategory(cat.id),
+          icon: getIconForCategory(cat.id),
+          totalLessons: cat.totalLessons,
+          completedLessons: cat.completedLessons,
+          isUnlocked: cat.isUnlocked,
+          difficulty: cat.difficulty,
+          estimatedTime: getEstimatedTimeForCategory(cat.id),
+          color: getColorForCategory(cat.id),
+          topics: getTopicsForCategory(cat.id),
+        }))
+      : allLessonCategories;
+
+  const filteredLessons = lessonCategories.filter((lesson) => {
     const matchesSearch =
       lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lesson.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -257,21 +399,57 @@ export default function LessonsPage() {
     return matchesSearch && matchesDifficulty;
   });
 
-  const totalLessons = allLessonCategories.reduce(
-    (sum, cat) => sum + cat.totalLessons,
-    0
-  );
-  const completedLessons = allLessonCategories.reduce(
-    (sum, cat) => sum + cat.completedLessons,
-    0
-  );
-  const overallProgress = Math.round((completedLessons / totalLessons) * 100);
+  // Calculate overall progress
+  const totalLessons =
+    isAuthenticated && progressOverview
+      ? progressOverview.overall.totalLessons
+      : lessonCategories.reduce((sum, cat) => sum + cat.totalLessons, 0);
 
-  // Get lesson progress status
-  const getLessonStatus = (lessonId: string) => {
-    const progress = lessonProgress.find((p) => p.lessonId === lessonId);
-    return progress?.status || "NOT_STARTED";
+  const completedLessons =
+    isAuthenticated && progressOverview
+      ? progressOverview.overall.completedLessons
+      : lessonCategories.reduce((sum, cat) => sum + cat.completedLessons, 0);
+
+  const overallProgress =
+    totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+  // Get lesson progress status (unified for both auth states)
+  const getOverallLessonStatus = (lessonId: string) => {
+    if (isAuthenticated) {
+      return getAuthenticatedLessonStatus(lessonId);
+    } else {
+      const progress = lessonProgress.find((p) => p.lessonId === lessonId);
+      return progress?.status || "NOT_STARTED";
+    }
   };
+
+  // Handle category progress update for authenticated users
+  const handleCategoryProgressUpdate = async (categoryId: number) => {
+    if (!isAuthenticated) return;
+
+    const category = getCategoryProgress(categoryId);
+    if (category && category.completedLessons < category.totalLessons) {
+      const newCompletedLessons = category.completedLessons + 1;
+      const action =
+        newCompletedLessons >= category.totalLessons ? "complete" : "progress";
+
+      await updateCategoryProgress(categoryId, newCompletedLessons, action);
+    }
+  };
+
+  if (loading && isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -323,7 +501,7 @@ export default function LessonsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {interactiveLessons.map((lesson) => {
-              const status = getLessonStatus(lesson.id);
+              const status = getOverallLessonStatus(lesson.id);
               const isCompleted = status === "COMPLETED";
               const isInProgress = status === "IN_PROGRESS";
 
@@ -405,9 +583,42 @@ export default function LessonsPage() {
 
         {/* Lesson Categories */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            All Lesson Categories
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">
+              All Lesson Categories
+            </h2>
+            {!isAuthenticated && (
+              <Badge
+                variant="outline"
+                className="bg-blue-50 text-blue-700 border-blue-200"
+              >
+                <Users className="w-4 h-4 mr-1" />
+                Sign in to track progress
+              </Badge>
+            )}
+          </div>
+
+          {/* Progress Notice */}
+          {isAuthenticated && (
+            <Card className="mb-6 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-green-800">
+                      Progress Tracking Active
+                    </p>
+                    <p className="text-sm text-green-600">
+                      Click on lesson categories to mark progress. Your XP and
+                      achievements will be updated automatically!
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Search and Filter */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -444,7 +655,12 @@ export default function LessonsPage() {
                   lesson.color
                 } border-2 hover:shadow-lg transition-all ${
                   !lesson.isUnlocked ? "opacity-60" : ""
-                }`}
+                } ${isAuthenticated ? "cursor-pointer" : ""}`}
+                onClick={() =>
+                  isAuthenticated &&
+                  lesson.isUnlocked &&
+                  handleCategoryProgressUpdate(lesson.id)
+                }
               >
                 <CardHeader>
                   <div className="flex items-start justify-between mb-2">
@@ -532,12 +748,47 @@ export default function LessonsPage() {
 
                     {/* Action Button */}
                     {lesson.isUnlocked ? (
-                      <Button className="w-full" asChild>
-                        <Link href={`/lesson/${lesson.id}`}>
-                          <Play className="w-4 h-4 mr-2" />
-                          {lesson.completedLessons === 0 ? "Start" : "Continue"}
-                        </Link>
-                      </Button>
+                      <>
+                        {isAuthenticated ? (
+                          <Button
+                            className="w-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCategoryProgressUpdate(lesson.id);
+                            }}
+                            disabled={
+                              lesson.completedLessons >= lesson.totalLessons
+                            }
+                          >
+                            {lesson.completedLessons >= lesson.totalLessons ? (
+                              <>
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Completed
+                              </>
+                            ) : lesson.completedLessons === 0 ? (
+                              <>
+                                <Play className="w-4 h-4 mr-2" />
+                                Start Category
+                              </>
+                            ) : (
+                              <>
+                                <Play className="w-4 h-4 mr-2" />
+                                Continue ({lesson.completedLessons}/
+                                {lesson.totalLessons})
+                              </>
+                            )}
+                          </Button>
+                        ) : (
+                          <Button className="w-full" asChild>
+                            <Link href={`/lesson/${lesson.id}`}>
+                              <Play className="w-4 h-4 mr-2" />
+                              {lesson.completedLessons === 0
+                                ? "Start"
+                                : "Continue"}
+                            </Link>
+                          </Button>
+                        )}
+                      </>
                     ) : (
                       <Button className="w-full" disabled>
                         <Lock className="w-4 h-4 mr-2" />
@@ -594,7 +845,8 @@ export default function LessonsPage() {
 
         {/* Footer */}
       </div>
-        <Footer />
+      <Footer />
+      <ApiDebugger />
     </div>
   );
 }
